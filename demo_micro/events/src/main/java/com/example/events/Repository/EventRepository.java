@@ -10,7 +10,8 @@ import java.util.List;
 @Repository
 public interface EventRepository extends MongoRepository<EventModel, String> {
 
-    EventModel findByrNo(Integer rNo);
+    // ✅ Returns LIST for multiple events per student
+    List<EventModel> findByrNo(Integer rNo);
 
     List<EventModel> findByEventDateBetween(Date start, Date end);
 }

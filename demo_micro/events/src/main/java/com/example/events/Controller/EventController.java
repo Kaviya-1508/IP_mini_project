@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -29,24 +28,37 @@ public class EventController {
         return service.getAll();
     }
 
-    @GetMapping("/{rNo}")
-    public ResponseEntity<EventModel> getOne(@PathVariable Integer rNo) {
-        EventModel event = service.getbyrNo(rNo);
+    // ✅ NEW: Get all events for a student (returns array)
+    @GetMapping("/student/{rNo}")
+    public ResponseEntity<List<EventModel>> getEventsByStudent(@PathVariable Integer rNo) {
+        List<EventModel> events = service.getEventsByrNo(rNo);
+        return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventModel> getOne(@PathVariable String eventId) {
+        EventModel event = service.getById(eventId);
         return event != null ? ResponseEntity.ok(event) : ResponseEntity.notFound().build();
     }
 
-    @PutMapping("/{rNo}")
-    public ResponseEntity<EventModel> update(@PathVariable Integer rNo,
+    @PutMapping("/{eventId}")
+    public ResponseEntity<EventModel> update(@PathVariable String eventId,
                                              @RequestBody EventModel event) {
-        EventModel updated = service.update(rNo, event);
+        EventModel updated = service.update(eventId, event);
         return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{rNo}")
-    public ResponseEntity<Void> delete(@PathVariable Integer rNo,
-                                       @RequestParam String facultyId) {
-        service.delete(rNo, facultyId);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<?> delete(@PathVariable String eventId,
+                                    @RequestParam String facultyId) {
+        try {
+            service.delete(eventId, facultyId);
+            return ResponseEntity.ok().body("Event deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Delete failed: " + e.getMessage());
+        }
     }
 
     @GetMapping("/month")

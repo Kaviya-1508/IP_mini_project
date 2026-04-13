@@ -27,7 +27,8 @@ export const FacultyProvider: React.FC<{ children: ReactNode }> = ({ children })
       setFacultyData(data);
       if (data) {
         localStorage.setItem('facultyData', JSON.stringify(data));
-        localStorage.setItem('facultyId', data.facultyId);
+        // ✅ FIXED: Store MongoDB _id (data.id), not data.facultyId
+        localStorage.setItem('facultyId', data.id);
       }
     },
     logout,

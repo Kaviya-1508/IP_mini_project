@@ -23,7 +23,6 @@ const AddEvent: React.FC = () => {
     type: 'success'
   });
 
-  // Check authentication
   useEffect(() => {
     if (!isAuthenticated) {
       setToast({
@@ -49,7 +48,6 @@ const AddEvent: React.FC = () => {
 
     const facultyId = localStorage.getItem("facultyId") || "";
 
-    // Debug logging
     console.log('🔍 Current facultyId from localStorage:', facultyId);
     console.log('🔍 facultyData from context:', facultyData);
 

@@ -61,12 +61,22 @@ const ViewEvents: React.FC = () => {
     }
   };
 
-  const handleDelete = async (rNo: number) => {
+  // ✅ FIXED: Delete by event ID
+  const handleDelete = async (eventId: string) => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       const facultyId = localStorage.getItem("facultyId") || "";
-      console.log('🗑️ Deleting event with facultyId:', facultyId);
+
+      if (!facultyId) {
+        setToast({
+          show: true,
+          message: 'Faculty ID not found. Please login again.',
+          type: 'error'
+        });
+        return;
+      }
+
       try {
-        await deleteEvent(rNo, facultyId);
+        await deleteEvent(eventId, facultyId);
         setToast({
           show: true,
           message: 'Event deleted successfully!',
@@ -77,7 +87,7 @@ const ViewEvents: React.FC = () => {
         console.error('Delete error:', error);
         setToast({
           show: true,
-          message: error.message || 'Failed to delete event',
+          message: error.response?.data || error.message || 'Failed to delete event',
           type: 'error'
         });
       }
@@ -85,7 +95,6 @@ const ViewEvents: React.FC = () => {
   };
 
   const handleEdit = (event: Event) => {
-    // Navigate to edit page with event data
     navigate("/faculty/edit-event", { state: { event } });
   };
 
@@ -150,7 +159,6 @@ const ViewEvents: React.FC = () => {
         ) : (
           <div className="events-list">
             {events.map((event, index) => {
-              // Check if this event belongs to the logged-in faculty
               const isOwnEvent = event.facultyId === facultyData?.id;
 
               return (
@@ -166,7 +174,8 @@ const ViewEvents: React.FC = () => {
                           <button className="edit-btn" onClick={() => handleEdit(event)}>
                             ✏️ Edit
                           </button>
-                          <button className="delete-btn" onClick={() => handleDelete(event.rNo)}>
+                          {/* ✅ FIXED: Pass event.id */}
+                          <button className="delete-btn" onClick={() => handleDelete(event.id!)}>
                             🗑️ Delete
                           </button>
                         </>

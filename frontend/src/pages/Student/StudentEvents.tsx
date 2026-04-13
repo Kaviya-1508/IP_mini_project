@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getEventByRoll } from "../../services/api";
+import { getEventsByStudent } from "../../services/api";
 import { useStudent } from "../../contexts/StudentContext";
 import Toast from "../../components/Toast";
-import "./StudentEvents.css";
+import "../Faculty/ViewEvents.css";
+
+interface Event {
+  id?: string;
+  studentName: string;
+  rNo: number;
+  eventName: string;
+  eventLocation: string;
+  eventDate: string;
+  eventDescription: string;
+  facultyId?: string;
+}
 
 const StudentEvents: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, studentData, logout, rNo } = useStudent();
-  const [event, setEvent] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const { isAuthenticated, studentData, logout } = useStudent();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     show: false,
     message: '',
@@ -26,21 +37,24 @@ const StudentEvents: React.FC = () => {
       setTimeout(() => {
         navigate("/student/login");
       }, 1500);
-    } else if (rNo) {
-      loadEvent();
+    } else {
+      loadEvents();
     }
-  }, [isAuthenticated, navigate, rNo]);
+  }, [isAuthenticated, navigate]);
 
-  const loadEvent = async () => {
-    setLoading(true);
+  const loadEvents = async () => {
+    const rNo = studentData?.rNo || localStorage.getItem("studentRNo");
+    if (!rNo) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log(`Fetching event for roll number: ${rNo}`);
-      const res = await getEventByRoll(Number(rNo));
-      console.log('Event response:', res.data);
-      setEvent(res.data);
-      
-      // If no event found
-      if (!res.data || Object.keys(res.data).length === 0) {
+      const res = await getEventsByStudent(Number(rNo));
+      console.log('Events response:', res.data);
+      setEvents(Array.isArray(res.data) ? res.data : []);
+
+      if (res.data.length === 0) {
         setToast({
           show: true,
           message: 'No events found for your roll number',
@@ -48,23 +62,13 @@ const StudentEvents: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error('Error loading event:', error);
-      
-      // Handle 404 specifically
-      if (error.response?.status === 404) {
-        setEvent(null);
-        setToast({
-          show: true,
-          message: 'No events registered for your account yet',
-          type: 'info'
-        });
-      } else {
-        setToast({
-          show: true,
-          message: error.message || 'Failed to load events. Please try again.',
-          type: 'error'
-        });
-      }
+      console.error('Error loading events:', error);
+      setToast({
+        show: true,
+        message: error.message || 'Failed to load events',
+        type: 'error'
+      });
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -72,6 +76,8 @@ const StudentEvents: React.FC = () => {
 
   const handleLogout = () => {
     logout();
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentRNo");
     setToast({
       show: true,
       message: 'Logged out successfully',
@@ -96,7 +102,7 @@ const StudentEvents: React.FC = () => {
   }
 
   return (
-    <div className="student-events-container fade-in">
+    <div className="view-events-container fade-in">
       <div className="container">
         <div className="events-header">
           <div className="header-with-logout">
@@ -110,65 +116,56 @@ const StudentEvents: React.FC = () => {
           </div>
         </div>
 
-        {event && event.eventName ? (
-          <div className="event-card-detailed">
-            <div className="event-card-badge">Active Registration</div>
-            <div className="event-card-content">
-              <h2 className="event-name">{event.eventName}</h2>
-              <div className="event-details-grid">
-                <div className="detail-item">
-                  <div className="detail-icon">👤</div>
-                  <div>
-                    <div className="detail-label">Student</div>
-                    <div className="detail-value">{event.studentName}</div>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-icon">🎓</div>
-                  <div>
-                    <div className="detail-label">Roll Number</div>
-                    <div className="detail-value">{event.rNo}</div>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-icon">📍</div>
-                  <div>
-                    <div className="detail-label">Location</div>
-                    <div className="detail-value">{event.eventLocation}</div>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-icon">📅</div>
-                  <div>
-                    <div className="detail-label">Date</div>
-                    <div className="detail-value">
-                      {event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : 'Date not specified'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {event.eventDescription && (
-                <div className="event-description-section">
-                  <h3>Description</h3>
-                  <p>{event.eventDescription}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
+        {events.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
             <h3>No Events Found</h3>
             <p>You haven't registered for any events yet</p>
             <p className="contact-message">Please contact your faculty to register for events</p>
-            <button className="btn btn-primary" onClick={loadEvent}>
+            <button className="btn btn-primary" onClick={loadEvents}>
               Refresh
             </button>
+          </div>
+        ) : (
+          <div className="events-list">
+            {events.map((event) => (
+              <div key={event.id} className="event-item own-event">
+                <div className="event-item-header">
+                  <div className="event-badge">
+                    <span className="badge-icon">🎯</span>
+                    <span className="badge-text">{event.eventName}</span>
+                  </div>
+                </div>
+                <div className="event-item-body">
+                  <div className="event-info">
+                    <div className="info-row">
+                      <span className="info-label">Student:</span>
+                      <span className="info-value">{event.studentName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Roll No:</span>
+                      <span className="info-value">{event.rNo}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Location:</span>
+                      <span className="info-value">{event.eventLocation}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Date:</span>
+                      <span className="info-value">
+                        {event.eventDate ? new Date(event.eventDate).toLocaleDateString() : 'Not specified'}
+                      </span>
+                    </div>
+                  </div>
+                  {event.eventDescription && (
+                    <div className="event-description">
+                      <span className="info-label">Description:</span>
+                      <p>{event.eventDescription}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

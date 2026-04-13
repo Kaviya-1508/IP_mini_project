@@ -12,6 +12,7 @@ const EditEvent: React.FC = () => {
     const eventData = location.state?.event;
 
     const [event, setEvent] = useState({
+        id: "",
         studentName: "",
         rNo: 0,
         eventName: "",
@@ -31,9 +32,9 @@ const EditEvent: React.FC = () => {
             navigate("/faculty/login");
         }
 
-        // Load event data
         if (eventData) {
             setEvent({
+                id: eventData.id,
                 studentName: eventData.studentName,
                 rNo: eventData.rNo,
                 eventName: eventData.eventName,
@@ -60,12 +61,18 @@ const EditEvent: React.FC = () => {
         setLoading(true);
 
         try {
-            const eventData = {
-                ...event,
-                facultyId
+            const updateData = {
+                studentName: event.studentName,
+                rNo: event.rNo,
+                eventName: event.eventName,
+                eventLocation: event.eventLocation,
+                eventDate: event.eventDate,
+                eventDescription: event.eventDescription,
+                facultyId: facultyId
             };
-            console.log('Updating event:', eventData);
-            await updateEvent(event.rNo, eventData);
+            console.log('Updating event:', updateData);
+            // ✅ FIXED: Update by event ID, not roll number
+            await updateEvent(event.id, updateData);
             setToast({
                 show: true,
                 message: 'Event updated successfully!',

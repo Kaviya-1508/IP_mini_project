@@ -31,10 +31,12 @@ const FacultyLogin: React.FC = () => {
       const res = await facultyLogin(form);
       setFacultyData(res.data);
 
-      // Store faculty ID in localStorage for event operations
+      // ✅ Store the MongoDB _id (not facultyId)
       if (res.data.id) {
         localStorage.setItem("facultyId", res.data.id);
-        console.log('✅ Stored faculty ID:', res.data.id);
+        console.log('✅ Stored faculty MongoDB _id:', res.data.id);
+      } else {
+        console.error('❌ No id in response:', res.data);
       }
 
       setToast({

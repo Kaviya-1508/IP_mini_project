@@ -1,8 +1,8 @@
-// @ts-nocheck  // 🔥 temporary to avoid TypeScript blocking build
+// @ts-nocheck
 
 import axios from "axios";
 import type { Faculty, Student, Event } from "../types";
-import type { AxiosInstance } from "axios"; // ✅ ADDED
+import type { AxiosInstance } from "axios";
 
 // API Base URLs
 const FACULTY_URL = "http://localhost:8082/faculty";
@@ -15,9 +15,9 @@ const studentApi = axios.create({ baseURL: STUDENT_URL });
 const eventApi = axios.create({ baseURL: EVENT_URL });
 
 // Add request interceptor for logging
-const addLoggingInterceptor = (instance: AxiosInstance, name: string) => { // ✅ FIXED TYPE
+const addLoggingInterceptor = (instance: AxiosInstance, name: string) => {
   instance.interceptors.request.use(
-    (config: any) => { // ✅ ADDED TYPE
+    (config: any) => {
       console.log(`📤 ${name} Request:`, {
         url: config.url,
         method: config.method,
@@ -26,21 +26,21 @@ const addLoggingInterceptor = (instance: AxiosInstance, name: string) => { // �
       });
       return config;
     },
-    (error: any) => { // ✅ ADDED TYPE
+    (error: any) => {
       console.error(`❌ ${name} Request Error:`, error);
       return Promise.reject(error);
     }
   );
 
   instance.interceptors.response.use(
-    (response: any) => { // ✅ ADDED TYPE
+    (response: any) => {
       console.log(`📥 ${name} Response:`, {
         status: response.status,
         data: response.data
       });
       return response;
     },
-    (error: any) => { // ✅ ADDED TYPE
+    (error: any) => {
       console.error(`❌ ${name} Response Error:`, {
         status: error.response?.status,
         data: error.response?.data,
@@ -81,11 +81,7 @@ export const studentRegister = (data: Student) => {
   console.log('📝 Registering student:', data);
   return studentApi.post(`/regStudent`, data);
 };
-// Add this to your api.ts file
-export const updateEvent = (rNo: number, data: Event) => {
-  console.log(`✏️ Updating event for roll number: ${rNo}`, data);
-  return eventApi.put(`/${rNo}`, data);
-};
+
 export const studentLogin = (data: { email: string; password: string }) => {
   console.log('🔐 Student login attempt:', data.email);
   return studentApi.post(`/StuLogin`, data);
@@ -102,14 +98,28 @@ export const getEvents = () => {
   return eventApi.get<Event[]>(``);
 };
 
+// ✅ FIXED: Get events by student roll number (returns array)
+export const getEventsByStudent = (rNo: number) => {
+  console.log(`🔍 Fetching events for student roll number: ${rNo}`);
+  return eventApi.get<Event[]>(`/student/${rNo}`);
+};
+
+// ✅ FIXED: Get single event by roll number (deprecated, use getEventsByStudent)
 export const getEventByRoll = (rNo: number) => {
-  console.log(`🔍 Fetching event for roll number: ${rNo}`);
+  console.log(`⚠️ Deprecated: Use getEventsByStudent instead for roll number: ${rNo}`);
   return eventApi.get<Event>(`/${rNo}`);
 };
 
-export const deleteEvent = (rNo: number, facultyId: string) => {
-  console.log(`🗑️ Deleting event for roll number: ${rNo}, facultyId: ${facultyId}`);
-  return eventApi.delete(`/${rNo}?facultyId=${facultyId}`);
+// ✅ FIXED: Delete by event ID (not roll number)
+export const deleteEvent = (eventId: string, facultyId: string) => {
+  console.log(`🗑️ Deleting event with id: ${eventId}, facultyId: ${facultyId}`);
+  return eventApi.delete(`/${eventId}?facultyId=${facultyId}`);
+};
+
+// ✅ FIXED: Update by event ID (not roll number)
+export const updateEvent = (eventId: string, data: Event) => {
+  console.log(`✏️ Updating event with id: ${eventId}`, data);
+  return eventApi.put(`/${eventId}`, data);
 };
 
 export default { facultyApi, studentApi, eventApi };
