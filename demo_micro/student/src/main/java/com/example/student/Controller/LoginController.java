@@ -1,6 +1,7 @@
 package com.example.student.Controller;
 
 import com.example.events.Model.EventModel;
+// OR if that doesn't work, remove the import and use Object
 import com.example.student.Model.LoginModel;
 import com.example.student.Model.RegisterModel;
 import com.example.student.Service.LoginService;
