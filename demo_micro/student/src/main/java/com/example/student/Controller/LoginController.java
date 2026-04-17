@@ -1,7 +1,5 @@
 package com.example.student.Controller;
 
-import com.example.events.Model.EventModel;
-// OR if that doesn't work, remove the import and use Object
 import com.example.student.Model.LoginModel;
 import com.example.student.Model.RegisterModel;
 import com.example.student.Service.LoginService;
@@ -12,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://ip-mini-project-xi.vercel.app"
+}, allowCredentials = "true")
 @RestController
 public class LoginController {
 
@@ -26,30 +27,21 @@ public class LoginController {
     public ResponseEntity<?> disEvent(@RequestBody LoginModel loginModel) {
         try {
             System.out.println("🔐 Student login attempt: " + loginModel.getEmail());
-
-            // Get student details
+            
             RegisterModel student = loginService.findStudent(loginModel);
-
+            
             if (student != null) {
                 System.out.println("✅ Login successful for: " + loginModel.getEmail());
-
-                // Get event details if exists (404 is handled gracefully)
-                EventModel event = null;
-                try {
-                    event = loginService.getEventByRoll(student.getRNo());
-                } catch (Exception e) {
-                    // Event not found is fine
-                    System.out.println("No event found for student");
-                }
-
-                // Create response with student data
+                
+                Object event = loginService.getEventByRoll(student.getRNo());
+                
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", student.getId());
                 response.put("name", student.getName());
                 response.put("rNo", student.getRNo());
                 response.put("email", student.getEmail());
-                response.put("event", event); // Can be null
-
+                response.put("event", event);
+                
                 return ResponseEntity.ok(response);
             } else {
                 System.out.println("❌ Login failed for: " + loginModel.getEmail());
@@ -58,7 +50,6 @@ public class LoginController {
             }
         } catch (Exception e) {
             System.err.println("❌ Login error: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Login failed: " + e.getMessage());
         }

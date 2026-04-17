@@ -1,6 +1,5 @@
 package com.example.student.Service;
 
-import com.example.events.Model.EventModel;
 import com.example.student.Model.LoginModel;
 import com.example.student.Model.RegisterModel;
 import com.example.student.Repository.RegisterRepo;
@@ -23,13 +22,10 @@ public class LoginService {
     public RegisterModel findStudent(LoginModel login) {
         try {
             RegisterModel stuDetails = repo.findByEmail(login.getEmail());
-
             if (stuDetails == null) {
                 System.out.println("Student not found with email: " + login.getEmail());
                 return null;
             }
-
-            // Verify password
             if (stuDetails.getPassword().equals(login.getPassword())) {
                 System.out.println("Password verified for student: " + login.getEmail());
                 return stuDetails;
@@ -39,32 +35,24 @@ public class LoginService {
             }
         } catch (Exception e) {
             System.err.println("Error in findStudent: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
 
-    public EventModel getEventByRoll(Integer rNo) {
-        try {
-            String StuEventUrl = "http://localhost:8081/api/stu_events/" + rNo;
-            System.out.println("Calling events service at: " + StuEventUrl);
-
-            ResponseEntity<EventModel> response = restTemplate.getForEntity(StuEventUrl, EventModel.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                System.out.println("Event found for roll number: " + rNo);
-                return response.getBody();
-            } else {
-                System.out.println("No event found for roll number: " + rNo);
-                return null;
-            }
-        } catch (HttpClientErrorException.NotFound e) {
-            // This is expected when student has no event registered
-            System.out.println("No event found for roll number: " + rNo + " (this is normal)");
-            return null;
-        } catch (Exception e) {
-            System.err.println("Error calling events service: " + e.getMessage());
-            return null;
-        }
+  public Object getEventByRoll(Integer rNo) {
+    try {
+        // Change this:
+        // String StuEventUrl = "http://localhost:8081/api/stu_events/student/" + rNo;
+        
+        // To this:
+        String StuEventUrl = "https://event-management-events.onrender.com/api/stu_events/student/" + rNo;
+        
+        System.out.println("Calling events service at: " + StuEventUrl);
+        ResponseEntity<Object> response = restTemplate.getForEntity(StuEventUrl, Object.class);
+        return response.getBody();
+    } catch (Exception e) {
+        System.out.println("Error calling events service: " + e.getMessage());
+        return null;
     }
+}
 }
