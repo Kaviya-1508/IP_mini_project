@@ -10,7 +10,7 @@ const RoleSelection: React.FC = () => {
       <div className="role-selection-card">
         <div className="role-header">
           <div className="role-icon">🎓</div>
-          <h1 className="role-title">Welcome to EventHub</h1>
+          <h1 className="role-title">Welcome to CampusSync</h1>
           <p className="role-subtitle">Choose your role to continue</p>
         </div>
 
